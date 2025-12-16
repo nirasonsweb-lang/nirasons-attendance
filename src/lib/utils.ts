@@ -54,7 +54,26 @@ export function calculateWorkHours(
 }
 
 export function getTodayDate(): Date {
-  const today = new Date();
+  const today = getISTDate();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+/**
+ * Get current date and time in IST (Indian Standard Time, UTC+5:30)
+ */
+export function getISTDate(): Date {
+  const now = new Date();
+  const istOffset = 5.5 * 60; // IST is UTC+5:30 in minutes
+  const localTime = new Date(now.getTime() + (istOffset * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+  return localTime;
+}
+
+/**
+ * Get today's date (midnight) in IST
+ */
+export function getISTToday(): Date {
+  const today = getISTDate();
   today.setHours(0, 0, 0, 0);
   return today;
 }
@@ -69,12 +88,12 @@ export function getDaysInMonth(date: Date): Date[] {
   const { start, end } = getDateRangeForMonth(date);
   const days: Date[] = [];
   const current = new Date(start);
-  
+
   while (current <= end) {
     days.push(new Date(current));
     current.setDate(current.getDate() + 1);
   }
-  
+
   return days;
 }
 

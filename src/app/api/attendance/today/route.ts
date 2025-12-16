@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { getISTToday } from '@/lib/utils';
 
 export async function GET() {
   try {
     const session = await getSession();
-    
+
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -13,9 +14,8 @@ export async function GET() {
       );
     }
 
-    // Get today's date (without time)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date in IST
+    const today = getISTToday();
 
     const attendance = await prisma.attendance.findUnique({
       where: {

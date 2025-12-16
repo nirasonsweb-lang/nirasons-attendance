@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { checkInSchema } from '@/lib/validations';
+import { getISTDate, getISTToday } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    
+
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate input
     const result = checkInSchema.safeParse(body);
     if (!result.success) {
@@ -27,9 +28,9 @@ export async function POST(request: NextRequest) {
 
     const { latitude, longitude, address } = result.data;
 
-    // Get today's date (without time)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get current time and today's date in IST
+    const localTime = getISTDate();
+    const today = getISTToday();
 
     // Check if already checked in today
     const existing = await prisma.attendance.findUnique({
@@ -59,13 +60,12 @@ export async function POST(request: NextRequest) {
     const workStartTime = startTimeSetting?.value || '09:00';
     const lateThreshold = parseInt(lateThresholdSetting?.value || '15');
 
-    // Calculate if late
-    const now = new Date();
+    // Calculate if late using local time
     const [startHour, startMin] = workStartTime.split(':').map(Number);
     const startDateTime = new Date(today);
     startDateTime.setHours(startHour, startMin + lateThreshold, 0, 0);
 
-    const isLate = now > startDateTime;
+    const isLate = localTime > startDateTime;
 
     // Create or update attendance record
     const attendance = await prisma.attendance.upsert({
@@ -78,14 +78,14 @@ export async function POST(request: NextRequest) {
       create: {
         userId: session.userId,
         date: today,
-        checkInTime: now,
+        checkInTime: localTime,
         checkInLat: latitude,
         checkInLng: longitude,
         checkInAddr: address,
         status: isLate ? 'LATE' : 'ON_TIME',
       },
       update: {
-        checkInTime: now,
+        checkInTime: localTime,
         checkInLat: latitude,
         checkInLng: longitude,
         checkInAddr: address,

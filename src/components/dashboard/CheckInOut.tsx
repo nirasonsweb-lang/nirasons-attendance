@@ -76,16 +76,20 @@ export function CheckInOut() {
 
   const handleCheckIn = async () => {
     setError('');
+    setLocationError(''); // Clear previous location warning
     setActionLoading(true);
 
     try {
       // Try to get location, but don't fail if unavailable
       let loc = { lat: 0, lng: 0 };
+      let locationCaptured = false;
+
       try {
         loc = await getLocation();
+        locationCaptured = true;
       } catch (locErr) {
         console.warn('Location unavailable, proceeding without it:', locErr);
-        setLocationError('Location unavailable - check-in will proceed without location data');
+        // Don't set error - location is optional
       }
 
       const res = await fetch('/api/attendance/check-in', {
@@ -103,6 +107,11 @@ export function CheckInOut() {
         throw new Error(data.error || 'Check-in failed');
       }
 
+      // Show success message if location wasn't captured
+      if (!locationCaptured) {
+        setLocationError('Check-in successful (location not available)');
+      }
+
       await fetchStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Check-in failed');
@@ -113,16 +122,20 @@ export function CheckInOut() {
 
   const handleCheckOut = async () => {
     setError('');
+    setLocationError(''); // Clear previous location warning
     setActionLoading(true);
 
     try {
       // Try to get location, but don't fail if unavailable
       let loc = { lat: 0, lng: 0 };
+      let locationCaptured = false;
+
       try {
         loc = await getLocation();
+        locationCaptured = true;
       } catch (locErr) {
         console.warn('Location unavailable, proceeding without it:', locErr);
-        setLocationError('Location unavailable - check-out will proceed without location data');
+        // Don't set error - location is optional
       }
 
       const res = await fetch('/api/attendance/check-out', {
@@ -138,6 +151,11 @@ export function CheckInOut() {
 
       if (!res.ok) {
         throw new Error(data.error || 'Check-out failed');
+      }
+
+      // Show success message if location wasn't captured
+      if (!locationCaptured) {
+        setLocationError('Check-out successful (location not available)');
       }
 
       await fetchStatus();
@@ -206,10 +224,17 @@ export function CheckInOut() {
           </div>
         )}
 
-        {/* Error Messages */}
-        {(error || locationError) && (
+        {/* Error Message */}
+        {error && (
           <div className="mb-4 p-3 rounded-lg bg-status-error/10 border border-status-error/30 text-status-error text-sm text-center">
-            {error || locationError}
+            {error}
+          </div>
+        )}
+
+        {/* Location Info Message */}
+        {locationError && !error && (
+          <div className="mb-4 p-3 rounded-lg bg-status-info/10 border border-status-info/30 text-status-info text-sm text-center">
+            {locationError}
           </div>
         )}
 

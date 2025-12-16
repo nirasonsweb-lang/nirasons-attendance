@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getSession, isAdmin } from '@/lib/auth';
+import { getISTToday } from '@/lib/utils';
 
 interface AttendanceRecord {
   date: Date;
@@ -28,7 +29,7 @@ interface AttendanceGroup {
 export async function GET(request: Request) {
   try {
     const session = await getSession();
-    
+
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -46,8 +47,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || 'month';
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getISTToday();
 
     // Get total employees
     const totalEmployees = await prisma.user.count({

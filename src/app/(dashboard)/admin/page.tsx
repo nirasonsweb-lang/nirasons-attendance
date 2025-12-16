@@ -3,7 +3,7 @@ import { getSession, isAdmin } from '@/lib/auth';
 import prisma from '@/lib/db';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Card, Badge } from '@/components/ui';
-import { formatTime } from '@/lib/utils';
+import { formatTime, getISTToday } from '@/lib/utils';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default async function AdminDashboard() {
@@ -13,8 +13,7 @@ export default async function AdminDashboard() {
     redirect('/');
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getISTToday();
 
   // Get stats
   const [totalEmployees, todayAttendance, departments] = await Promise.all([
@@ -102,7 +101,7 @@ export default async function AdminDashboard() {
             <h2 className="text-lg font-semibold text-white">Today&apos;s Attendance</h2>
             <span className="text-sm text-gray-400">Avg Check-in: {avgCheckIn}</span>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

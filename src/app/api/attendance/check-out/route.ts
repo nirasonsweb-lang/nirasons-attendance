@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { checkOutSchema } from '@/lib/validations';
+import { getISTDate, getISTToday } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    
+
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Validate input
     const result = checkOutSchema.safeParse(body);
     if (!result.success) {
@@ -27,9 +28,9 @@ export async function POST(request: NextRequest) {
 
     const { latitude, longitude, address } = result.data;
 
-    // Get today's date (without time)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get current time and today's date in IST
+    const localTime = getISTDate();
+    const today = getISTToday();
 
     // Check if checked in today
     const attendance = await prisma.attendance.findUnique({
@@ -62,14 +63,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const now = new Date();
-    const workHours = (now.getTime() - new Date(attendance.checkInTime).getTime()) / (1000 * 60 * 60);
+    const workHours = (localTime.getTime() - new Date(attendance.checkInTime).getTime()) / (1000 * 60 * 60);
 
     // Update attendance record
     const updated = await prisma.attendance.update({
       where: { id: attendance.id },
       data: {
-        checkOutTime: now,
+        checkOutTime: localTime,
         checkOutLat: latitude,
         checkOutLng: longitude,
         checkOutAddr: address,

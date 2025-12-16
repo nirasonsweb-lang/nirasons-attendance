@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { checkOutSchema } from '@/lib/validations';
-import { getISTDate, getISTToday } from '@/lib/utils';
+import { getISTToday } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +28,10 @@ export async function POST(request: NextRequest) {
 
     const { latitude, longitude, address } = result.data;
 
-    // Get current time and today's date in IST
-    const localTime = getISTDate();
+    // Get current time (will be stored as UTC by PostgreSQL)
+    const now = new Date();
+
+    // Get today's date in IST for querying
     const today = getISTToday();
 
     // Check if checked in today
@@ -63,13 +65,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const workHours = (localTime.getTime() - new Date(attendance.checkInTime).getTime()) / (1000 * 60 * 60);
+    const workHours = (now.getTime() - new Date(attendance.checkInTime).getTime()) / (1000 * 60 * 60);
 
     // Update attendance record
     const updated = await prisma.attendance.update({
       where: { id: attendance.id },
       data: {
-        checkOutTime: localTime,
+        checkOutTime: now,
         checkOutLat: latitude,
         checkOutLng: longitude,
         checkOutAddr: address,

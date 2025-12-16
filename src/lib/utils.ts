@@ -61,6 +61,7 @@ export function getTodayDate(): Date {
 
 /**
  * Get current date and time in IST (Indian Standard Time, UTC+5:30)
+ * USE THIS ONLY FOR DATE CALCULATIONS, NOT FOR STORING TIMESTAMPS
  */
 export function getISTDate(): Date {
   const now = new Date();
@@ -71,6 +72,7 @@ export function getISTDate(): Date {
 
 /**
  * Get today's date (midnight) in IST
+ * Use this for querying "today's" records
  */
 export function getISTToday(): Date {
   const today = getISTDate();

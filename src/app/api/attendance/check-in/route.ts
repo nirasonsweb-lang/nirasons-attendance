@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { checkInSchema } from '@/lib/validations';
-import { getISTDate, getISTToday } from '@/lib/utils';
+import { getISTToday } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +28,10 @@ export async function POST(request: NextRequest) {
 
     const { latitude, longitude, address } = result.data;
 
-    // Get current time and today's date in IST
-    const localTime = getISTDate();
+    // Get current time (will be stored as UTC by PostgreSQL)
+    const now = new Date();
+
+    // Get today's date in IST for querying and late calculation
     const today = getISTToday();
 
     // Check if already checked in today
@@ -60,12 +62,14 @@ export async function POST(request: NextRequest) {
     const workStartTime = startTimeSetting?.value || '09:00';
     const lateThreshold = parseInt(lateThresholdSetting?.value || '15');
 
-    // Calculate if late using local time
+    // Calculate if late - compare in IST timezone
+    // Convert current UTC time to IST for comparison
+    const nowIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
     const [startHour, startMin] = workStartTime.split(':').map(Number);
     const startDateTime = new Date(today);
     startDateTime.setHours(startHour, startMin + lateThreshold, 0, 0);
 
-    const isLate = localTime > startDateTime;
+    const isLate = nowIST > startDateTime;
 
     // Create or update attendance record
     const attendance = await prisma.attendance.upsert({
@@ -78,14 +82,14 @@ export async function POST(request: NextRequest) {
       create: {
         userId: session.userId,
         date: today,
-        checkInTime: localTime,
+        checkInTime: now,
         checkInLat: latitude,
         checkInLng: longitude,
         checkInAddr: address,
         status: isLate ? 'LATE' : 'ON_TIME',
       },
       update: {
-        checkInTime: localTime,
+        checkInTime: now,
         checkInLat: latitude,
         checkInLng: longitude,
         checkInAddr: address,

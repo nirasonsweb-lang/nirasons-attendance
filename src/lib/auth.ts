@@ -45,12 +45,17 @@ export async function getSession(): Promise<JWTPayload | null> {
 
 export async function setAuthCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
+
+  // First, explicitly delete any existing token to prevent persistence
+  cookieStore.delete(COOKIE_NAME);
+
+  // Then set the new token with strict security settings
   cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    httpOnly: true, // Prevent JavaScript access
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    sameSite: 'strict', // Strict CSRF protection
     maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/',
+    path: '/', // Available across the entire site
   });
 }
 

@@ -1,79 +1,82 @@
-# Nirasons Attendance Management - Deployment Guide
+# Manual VPS Deployment Guide
+## Deploy Nirasons Attendance to attendance.nirasons.com
 
-## 🚀 Production Deployment to attendance.nirasons.com
-
-This guide walks you through deploying the Nirasons Attendance Management System to your VPS server.
+Simple step-by-step guide to deploy your app to Hostinger VPS.
 
 ---
 
 ## Prerequisites
 
-### Server Requirements
-- **OS**: Ubuntu 20.04 LTS or later
-- **RAM**: Minimum 2GB
-- **Storage**: Minimum 10GB
-- **Node.js**: Version 18.x or later
-- **PostgreSQL**: Version 14.x or later
-- **Nginx**: Latest stable version
-- **Domain**: attendance.nirasons.com pointing to your server IP
-
-### Local Requirements
-- SSH access to your server
-- Git repository access
+- Hostinger VPS with SSH access
+- Domain: attendance.nirasons.com pointing to your VPS IP
+- Your local code is production-ready (npm run build works)
 
 ---
 
-## Part 1: Server Setup
+## Part 1: Server Setup (One-Time)
 
-## 1.1 Initial Server Configuration
+### Step 1: Connect to VPS
 
 ```bash
-# Update system packages
-sudo apt update && sudo apt upgrade -y
-
-# Install required packages
-sudo apt install -y curl git nginx certbot python3-certbot-nginx
+ssh root@YOUR_VPS_IP
 ```
 
-### 1.2 Install Node.js
+### Step 2: Update System
 
 ```bash
-# Install Node.js 18.x
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
+apt update && apt upgrade -y
+```
 
-# Verify installation
-node --version  # Should show v18.x.x
+### Step 3: Install Node.js
+
+```bash
+# Install Node.js 18
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
+
+# Verify
+node --version  # Should show v18.x
 npm --version
 ```
 
-### 1.3 Install PostgreSQL
+### Step 4: Install PostgreSQL
 
 ```bash
 # Install PostgreSQL
-sudo apt install -y postgresql postgresql-contrib
+apt install -y postgresql postgresql-contrib
 
-# Start and enable PostgreSQL
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
+# Start service
+systemctl start postgresql
+systemctl enable postgresql
+```
 
-# Verify installation
-sudo systemctl status postgresql
+### Step 5: Install Nginx
+
+```bash
+apt install -y nginx
+systemctl start nginx
+systemctl enable nginx
+```
+
+### Step 6: Install PM2 (Process Manager)
+
+```bash
+npm install -g pm2
 ```
 
 ---
 
 ## Part 2: Database Setup
 
-### 2.1 Create Database and User
+### Step 1: Create Database
 
 ```bash
 # Switch to postgres user
 sudo -u postgres psql
 
-# Inside PostgreSQL prompt, run:
+# Inside PostgreSQL, run these commands:
 CREATE DATABASE nirasons_attendance;
-CREATE USER nirasons_user WITH ENCRYPTED PASSWORD 'YOUR_SECURE_PASSWORD_HERE';
+CREATE USER nirasons_user WITH ENCRYPTED PASSWORD 'YourStrongPassword123!';
 GRANT ALL PRIVILEGES ON DATABASE nirasons_attendance TO nirasons_user;
 ALTER DATABASE nirasons_attendance OWNER TO nirasons_user;
 
@@ -81,132 +84,143 @@ ALTER DATABASE nirasons_attendance OWNER TO nirasons_user;
 \c nirasons_attendance
 GRANT ALL ON SCHEMA public TO nirasons_user;
 
-# Exit PostgreSQL
+# Exit
 \q
 ```
 
-**🔒 Security Note**: Replace `YOUR_SECURE_PASSWORD_HERE` with a strong password. Save this password securely.
-
-### 2.2 Configure PostgreSQL for Local Access
-
-```bash
-# Edit pg_hba.conf
-sudo nano /etc/postgresql/14/main/pg_hba.conf
-
-# Add this line after the existing local connections:
-local   nirasons_attendance   nirasons_user                     md5
-
-# Restart PostgreSQL
-sudo systemctl restart postgresql
-```
+**⚠️ Important**: Save your database password somewhere safe!
 
 ---
 
-## Part 3: Application Deployment
+## Part 3: Deploy Application
 
-### 3.1 Create Application User
+### Step 1: Upload Your Code
+
+**On your LOCAL computer**, zip your project:
 
 ```bash
-# Create dedicated user for the application  
-sudo adduser --disabled-password --gecos "" nirasons
+# In your project folder
+npm run build  # Make sure build works
 
-# Switch to the user
-sudo su - nirasons
+# Create a zip (excluding node_modules)
+# On Windows PowerShell:
+Compress-Archive -Path * -DestinationPath nirasons-app.zip -Exclude node_modules,.next,.git
 ```
 
-### 3.2 Clone and Setup Application
+**Transfer to VPS** (choose one method):
+
+**Method A - Using SCP:**
+```bash
+scp nirasons-app.zip root@YOUR_VPS_IP:/root/
+```
+
+**Method B - Using FileZilla/WinSCP:**
+1. Download WinSCP: https://winscp.net
+2. Connect to your VPS
+3. Upload `nirasons-app.zip` to `/root/`
+
+**Method C - Using Git:**
+```bash
+# On VPS
+cd /var/www
+git clone YOUR_GITHUB_REPO_URL nirasons-attendance
+```
+
+### Step 2: Extract and Setup
+
+**On VPS:**
 
 ```bash
-# Clone repository (replace with your repo URL)
-git clone https://github.com/yourusername/nirasons-attendance.git
-cd nirasons-attendance
+# Create app directory
+mkdir -p /var/www/nirasons-attendance
+cd /var/www/nirasons-attendance
 
-# Install dependencies
-npm install
+# Extract (if using zip)
+unzip /root/nirasons-app.zip
 
-# Copy and configure environment
-cp .env.production.template .env
+# Or if using git, you're already here
+```
+
+### Step 3: Configure Environment
+
+```bash
+# Create .env file
 nano .env
 ```
 
-**Configure `.env` file:**
+**Paste this (update with your values):**
+
 ```env
-DATABASE_URL="postgresql://nirasons_user:YOUR_SECURE_PASSWORD@localhost:5432/nirasons_attendance?schema=public"
-JWT_SECRET="GENERATE_STRONG_SECRET_WITH: openssl rand -base64 32"
+# Database - Use the password you set earlier
+DATABASE_URL="postgresql://nirasons_user:YourStrongPassword123!@localhost:5432/nirasons_attendance?schema=public"
+
+# JWT Secret - Generate with: openssl rand -base64 32
+JWT_SECRET="your-super-secret-jwt-key-at-least-32-characters-long"
+
+# Domain
 NEXT_PUBLIC_APP_URL="https://attendance.nirasons.com"
+
+# Environment
 NODE_ENV="production"
 ```
 
-### 3.3 Database Migration and Seeding
+**Save**: Press `Ctrl+X`, then `Y`, then `Enter`
+
+### Step 4: Install and Build
 
 ```bash
+# Install dependencies
+npm install
+
+# Generate Prisma Client
+npx prisma generate
+
 # Run database migrations
 npx prisma migrate deploy
 
-# Run production seed (creates admin user)
+# Create admin account
 npm run db:seed:production
 
-# Follow the interactive prompts to create your admin account
-```
-
-### 3.4 Build Application
-
-```bash
-# Build for production
+# Build application
 npm run build
-
-# Test production build locally
-npm start
-
-# If successful, stop with Ctrl+C
 ```
 
-### 3.5 Setup PM2 Process Manager
+### Step 5: Start Application
 
 ```bash
-# Exit from nirasons user
-exit
-
-# Install PM2 globally
-sudo npm install -g pm2
-
-# Switch back to nirasons user
-sudo su - nirasons
-cd nirasons-attendance
-
-# Start application with PM2
+# Start with PM2
 pm2 start npm --name "nirasons-attendance" -- start
 
 # Save PM2 configuration
 pm2 save
 
-# Exit nirasons user
-exit
+# Make PM2 start on server reboot
+pm2 startup
+# Copy and run the command it shows
 
-# Setup PM2 to start on system boot
-sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u nirasons --hp /home/nirasons
+# Check status
+pm2 status
 ```
+
+✅ Your app is now running on port 3000!
 
 ---
 
-## Part 4: Nginx Configuration
+## Part 4: Setup Nginx & Domain
 
-### 4.1 Create Nginx Configuration
+### Step 1: Configure Nginx
 
 ```bash
-sudo nano /etc/nginx/sites-available/attendance.nirasons.com
+# Create nginx config
+nano /etc/nginx/sites-available/attendance.nirasons.com
 ```
 
-**Add this configuration:**
+**Paste this:**
+
 ```nginx
 server {
     listen 80;
     server_name attendance.nirasons.com;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -220,219 +234,188 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # Increase upload size if needed for avatars
     client_max_body_size 10M;
 }
 ```
 
-### 4.2 Enable Site and Test
+**Save and enable:**
 
 ```bash
-# Create symbolic link
-sudo ln -s /etc/nginx/sites-available/attendance.nirasons.com /etc/nginx/sites-enabled/
+# Enable site
+ln -s /etc/nginx/sites-available/attendance.nirasons.com /etc/nginx/sites-enabled/
 
 # Test configuration
-sudo nginx -t
+nginx -t
 
-# If test passes, reload nginx
-sudo systemctl reload nginx
+# Reload nginx
+systemctl reload nginx
 ```
 
----
-
-## Part 5: SSL Certificate (HTTPS)
-
-### 5.1 Install SSL Certificate with Certbot
+### Step 2: Setup SSL (HTTPS)
 
 ```bash
-# Obtain and install certificate
-sudo certbot --nginx -d attendance.nirasons.com
+# Install Certbot
+apt install -y certbot python3-certbot-nginx
+
+# Get SSL certificate
+certbot --nginx -d attendance.nirasons.com
 
 # Follow the prompts:
-# - Enter your email
-# - Agree to terms
-# - Choose whether to redirect HTTP to HTTPS (recommended: yes)
-```
-
-### 5.2 Auto-renewal Test
-
-```bash
-# Test auto-renewal
-sudo certbot renew --dry-run
-
-# If successful, certbot will auto-renew before expiry
+# 1. Enter your email
+# 2. Agree to terms (Y)
+# 3. Redirect HTTP to HTTPS: Yes (2)
 ```
 
 ---
 
-## Part 6: Post-Deployment Steps
+## ✅ Your App is Live!
 
-### 6.1 Verify Application
+Visit: **https://attendance.nirasons.com**
 
-1. **Access**: Open `https://attendance.nirasons.com`
-2. **Login**: Use admin credentials created during seeding
-3. **Test Features**:
-   - Add an employee
-   - Employee login
-   - Check-in/check-out
-   - View reports
-   - Export CSV
+**Login with:**
+- Email: `nirasons.web@gmail.com`
+- Password: `Nirasons@8269577642`
 
-### 6.2 Setup Database Backup
+---
+
+## Part 5: When You Need to Update
+
+When you make changes to your code:
+
+### Method 1: Upload New Files
 
 ```bash
-# Create backup script
-sudo nano /home/nirasons/backup-db.sh
+# On local: Build and zip
+npm run build
+Compress-Archive -Path * -DestinationPath update.zip -Exclude node_modules,.next,.git
+
+# Upload to VPS
+scp update.zip root@YOUR_VPS_IP:/root/
+
+# On VPS: Extract and restart
+cd /var/www/nirasons-attendance
+unzip -o /root/update.zip
+npm install
+npx prisma generate
+npx prisma migrate deploy
+npm run build
+pm2 restart nirasons-attendance
 ```
 
-**Add this content:**
+### Method 2: Using Git
+
 ```bash
-#!/bin/bash
-BACKUP_DIR="/home/nirasons/backups"
-DATE=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="$BACKUP_DIR/nirasons_attendance_$DATE.sql"
-
-mkdir -p $BACKUP_DIR
-
-# Create backup
-pg_dump -U nirasons_user nirasons_attendance > $BACKUP_FILE
-
-# Compress backup
-gzip $BACKUP_FILE
-
-# Keep only last 7 days of backups
-find $BACKUP_DIR -name "*.sql.gz" -mtime +7 -delete
-
-echo "Backup completed: $BACKUP_FILE.gz"
+# On VPS
+cd /var/www/nirasons-attendance
+git pull
+npm install
+npx prisma generate
+npx prisma migrate deploy
+npm run build
+pm2 restart nirasons-attendance
 ```
 
+---
+
+## Common Commands
+
+### Check App Status
 ```bash
-# Make executable
-chmod +x /home/nirasons/backup-db.sh
-
-# Add to crontab (daily backup at 2 AM)
-crontab -e
-# Add this line:
-0 2 * * * /home/nirasons/backup-db.sh >> /home/nirasons/backup.log 2>&1
-```
-
-### 6.3 Monitoring
-
-```bash
-# Check application status
 pm2 status
+pm2 logs nirasons-attendance
+```
 
-# View application logs
+### Restart App
+```bash
+pm2 restart nirasons-attendance
+```
+
+### Stop App
+```bash
+pm2 stop nirasons-attendance
+```
+
+### Start App
+```bash
+pm2 start nirasons-attendance
+```
+
+### View Logs
+```bash
+# App logs
 pm2 logs nirasons-attendance
 
-# Monitor in real-time
-pm2 monit
-
-# Check nginx logs
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+# Nginx logs
+tail -f /var/log/nginx/error.log
+tail -f /var/log/nginx/access.log
 ```
 
----
-
-## Part 7: Maintenance
-
-### Update Application
-
+### Database Backup
 ```bash
-sudo su - nirasons
-cd nirasons-attendance
+# Create backup
+pg_dump -U nirasons_user nirasons_attendance > backup_$(date +%Y%m%d).sql
 
-# Pull latest changes
-git pull origin main
-
-# Install new dependencies
-npm install
-
-# Run migrations if any
-npx prisma migrate deploy
-
-# Rebuild
-npm run build
-
-# Restart application
-pm2 restart nirasons-attendance
-
-# Exit
-exit
-```
-
-### Restart Services
-
-```bash
-# Restart application
-pm2 restart nirasons-attendance
-
-# Restart nginx
-sudo systemctl restart nginx
-
-# Restart PostgreSQL
-sudo systemctl restart postgresql
+# Restore backup
+psql -U nirasons_user nirasons_attendance < backup_20241215.sql
 ```
 
 ---
 
 ## Troubleshooting
 
-### Application won't start
+### App won't start
 ```bash
 # Check logs
 pm2 logs nirasons-attendance
 
-# Check if port 3000 is in use
-sudo netstat -tlnp | grep 3000
+# Check if port 3000 is already in use
+netstat -tlnp | grep 3000
 
-# Check environment variables
-cat /home/nirasons/nirasons-attendance/.env
+# Restart
+pm2 delete nirasons-attendance
+pm2 start npm --name "nirasons-attendance" -- start
 ```
 
-### Database connection errors
+### Can't access website
 ```bash
+# Check nginx
+nginx -t
+systemctl status nginx
+
+# Check if app is running
+pm2 status
+
+# Check firewall
+ufw status
+```
+
+### Database connection error
+```bash
+# Check PostgreSQL is running
+systemctl status postgresql
+
 # Test database connection
 psql -U nirasons_user -d nirasons_attendance -h localhost
 
-# Check PostgreSQL status
-sudo systemctl status postgresql
-```
-
-### Nginx errors
-```bash
-# Test nginx configuration
-sudo nginx -t
-
-# Check nginx logs
-sudo tail -100 /var/log/nginx/error.log
+# Check .env file has correct credentials
+cat /var/www/nirasons-attendance/.env
 ```
 
 ---
 
 ## Security Checklist
 
-- [ ] Strong database password set
-- [ ] Strong JWT_SECRET generated (32+ characters)
-- [ ] HTTPS enabled with valid SSL certificate
-- [ ] Firewall configured (allow ports 80, 443, 22 only)
-- [ ] SSH key-based authentication enabled
-- [ ] Regular backups configured
-- [ ] PostgreSQL accessible only from localhost
-- [ ] Demo credentials removed from code
-- [ ] Server packages up to date
+- [x] HTTPS enabled (SSL certificate)
+- [x] Strong database password
+- [x] Strong JWT secret (32+ characters)
+- [x] Firewall configured (only ports 22, 80, 443 open)
+- [x] Regular backups scheduled
+- [x] Server packages updated
 
 ---
 
-## Support & Maintenance
+## That's It!
 
-For issues or questions:
-1. Check logs: `pm2 logs nirasons-attendance`
-2. Review this deployment guide
-3. Check server resource usage: `htop` or `free -h`
+Your app is deployed and running on **attendance.nirasons.com**! 🎉
 
-**Regular Maintenance:**
-- Weekly: Review logs and monitor resource usage
-- Monthly: Update server packages (`sudo apt update && sudo apt upgrade`)
-- Quarterly: Review and rotate backup storage
+For support, check the logs and troubleshooting section above.

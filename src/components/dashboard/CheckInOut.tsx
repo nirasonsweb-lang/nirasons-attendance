@@ -79,8 +79,15 @@ export function CheckInOut() {
     setActionLoading(true);
 
     try {
-      const loc = await getLocation();
-      
+      // Try to get location, but don't fail if unavailable
+      let loc = { lat: 0, lng: 0 };
+      try {
+        loc = await getLocation();
+      } catch (locErr) {
+        console.warn('Location unavailable, proceeding without it:', locErr);
+        setLocationError('Location unavailable - check-in will proceed without location data');
+      }
+
       const res = await fetch('/api/attendance/check-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,8 +116,15 @@ export function CheckInOut() {
     setActionLoading(true);
 
     try {
-      const loc = await getLocation();
-      
+      // Try to get location, but don't fail if unavailable
+      let loc = { lat: 0, lng: 0 };
+      try {
+        loc = await getLocation();
+      } catch (locErr) {
+        console.warn('Location unavailable, proceeding without it:', locErr);
+        setLocationError('Location unavailable - check-out will proceed without location data');
+      }
+
       const res = await fetch('/api/attendance/check-out', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,19 +160,19 @@ export function CheckInOut() {
     <Card className="relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/10 via-transparent to-accent-secondary/5" />
-      
+
       <div className="relative">
         {/* Current Time */}
         <div className="text-center mb-6">
           <p className="text-5xl font-bold text-white mb-1">
-            {currentTime.toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
+            {currentTime.toLocaleTimeString('en-US', {
+              hour: '2-digit',
               minute: '2-digit',
-              hour12: false 
+              hour12: false
             })}
           </p>
           <p className="text-gray-400">
-            {currentTime.toLocaleDateString('en-US', { 
+            {currentTime.toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
               day: 'numeric'
@@ -186,7 +200,7 @@ export function CheckInOut() {
         {location && (
           <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mb-4">
             <svg className="w-4 h-4 text-status-success" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
             <span>Location captured</span>
           </div>

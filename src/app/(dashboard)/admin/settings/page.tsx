@@ -114,22 +114,28 @@ export default function AdminSettingsPage() {
   };
 
   const tabs = [
-    { id: 'general', label: 'General', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    )},
-    { id: 'attendance', label: 'Attendance', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    )},
-    { id: 'notifications', label: 'Notifications', icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    )},
+    {
+      id: 'general', label: 'General', icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    },
+    {
+      id: 'attendance', label: 'Attendance', icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
+      id: 'notifications', label: 'Notifications', icon: (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      )
+    },
   ];
 
   if (loading) {
@@ -149,10 +155,9 @@ export default function AdminSettingsPage() {
 
       {/* Message */}
       {message && (
-        <div className={`p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-status-success/10 text-status-success border border-status-success/20' :
+        <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-status-success/10 text-status-success border border-status-success/20' :
           'bg-status-error/10 text-status-error border border-status-error/20'
-        }`}>
+          }`}>
           {message.text}
         </div>
       )}
@@ -166,11 +171,10 @@ export default function AdminSettingsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-accent text-dark-900 font-medium'
-                      : 'text-dark-300 hover:bg-dark-700'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === tab.id
+                    ? 'bg-accent text-dark-900 font-medium'
+                    : 'text-dark-300 hover:bg-dark-700'
+                    }`}
                 >
                   {tab.icon}
                   {tab.label}
@@ -284,7 +288,7 @@ export default function AdminSettingsPage() {
                         onChange={(e) => setFormData({ ...formData, lateThreshold: e.target.value })}
                         placeholder="Minutes after start time"
                       />
-                      <p className="text-xs text-dark-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         Employees arriving after this many minutes will be marked as late
                       </p>
                     </div>
@@ -300,7 +304,7 @@ export default function AdminSettingsPage() {
                         onChange={(e) => setFormData({ ...formData, halfDayThreshold: e.target.value })}
                         placeholder="Minimum hours for half day"
                       />
-                      <p className="text-xs text-dark-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         Minimum work hours to count as half day attendance
                       </p>
                     </div>
@@ -313,34 +317,30 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                       <div>
                         <p className="font-medium text-white">Require Location for Check-in</p>
-                        <p className="text-sm text-dark-400">Employees must share their location when checking in</p>
+                        <p className="text-sm text-gray-400">Employees must share their location when checking in</p>
                       </div>
                       <button
                         onClick={() => setFormData({ ...formData, requireLocation: !formData.requireLocation })}
-                        className={`relative w-12 h-6 rounded-full transition-colors ${
-                          formData.requireLocation ? 'bg-accent' : 'bg-dark-500'
-                        }`}
+                        className={`relative w-12 h-6 rounded-full transition-colors ${formData.requireLocation ? 'bg-accent' : 'bg-dark-500'
+                          }`}
                       >
-                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                          formData.requireLocation ? 'left-7' : 'left-1'
-                        }`} />
+                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.requireLocation ? 'left-7' : 'left-1'
+                          }`} />
                       </button>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                       <div>
                         <p className="font-medium text-white">Allow Remote Check-in</p>
-                        <p className="text-sm text-dark-400">Employees can check in from any location</p>
+                        <p className="text-sm text-gray-400">Employees can check in from any location</p>
                       </div>
                       <button
                         onClick={() => setFormData({ ...formData, allowRemoteCheckIn: !formData.allowRemoteCheckIn })}
-                        className={`relative w-12 h-6 rounded-full transition-colors ${
-                          formData.allowRemoteCheckIn ? 'bg-accent' : 'bg-dark-500'
-                        }`}
+                        className={`relative w-12 h-6 rounded-full transition-colors ${formData.allowRemoteCheckIn ? 'bg-accent' : 'bg-dark-500'
+                          }`}
                       >
-                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                          formData.allowRemoteCheckIn ? 'left-7' : 'left-1'
-                        }`} />
+                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${formData.allowRemoteCheckIn ? 'left-7' : 'left-1'
+                          }`} />
                       </button>
                     </div>
 
@@ -357,7 +357,7 @@ export default function AdminSettingsPage() {
                           onChange={(e) => setFormData({ ...formData, maxCheckInDistance: e.target.value })}
                           placeholder="Distance in meters"
                         />
-                        <p className="text-xs text-dark-400 mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           Maximum distance from office for valid check-in
                         </p>
                       </div>
@@ -375,7 +375,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                     <div>
                       <p className="font-medium text-white">Daily Attendance Report</p>
-                      <p className="text-sm text-dark-400">Receive daily summary of attendance</p>
+                      <p className="text-sm text-gray-400">Receive daily summary of attendance</p>
                     </div>
                     <button className="relative w-12 h-6 bg-accent rounded-full">
                       <span className="absolute top-1 left-7 w-4 h-4 bg-white rounded-full" />
@@ -385,7 +385,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                     <div>
                       <p className="font-medium text-white">Late Check-in Alerts</p>
-                      <p className="text-sm text-dark-400">Get notified when employees arrive late</p>
+                      <p className="text-sm text-gray-400">Get notified when employees arrive late</p>
                     </div>
                     <button className="relative w-12 h-6 bg-accent rounded-full">
                       <span className="absolute top-1 left-7 w-4 h-4 bg-white rounded-full" />
@@ -395,7 +395,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                     <div>
                       <p className="font-medium text-white">Absent Employee Alerts</p>
-                      <p className="text-sm text-dark-400">Get notified when employees are absent</p>
+                      <p className="text-sm text-gray-400">Get notified when employees are absent</p>
                     </div>
                     <button className="relative w-12 h-6 bg-dark-500 rounded-full">
                       <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full" />
@@ -405,7 +405,7 @@ export default function AdminSettingsPage() {
                   <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                     <div>
                       <p className="font-medium text-white">Weekly Summary Report</p>
-                      <p className="text-sm text-dark-400">Receive weekly attendance summary every Monday</p>
+                      <p className="text-sm text-gray-400">Receive weekly attendance summary every Monday</p>
                     </div>
                     <button className="relative w-12 h-6 bg-accent rounded-full">
                       <span className="absolute top-1 left-7 w-4 h-4 bg-white rounded-full" />
@@ -419,7 +419,7 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                       <div>
                         <p className="font-medium text-white">Check-in Reminders</p>
-                        <p className="text-sm text-dark-400">Remind employees to check in at work start time</p>
+                        <p className="text-sm text-gray-400">Remind employees to check in at work start time</p>
                       </div>
                       <button className="relative w-12 h-6 bg-accent rounded-full">
                         <span className="absolute top-1 left-7 w-4 h-4 bg-white rounded-full" />
@@ -429,7 +429,7 @@ export default function AdminSettingsPage() {
                     <div className="flex items-center justify-between p-4 bg-dark-700 rounded-lg">
                       <div>
                         <p className="font-medium text-white">Check-out Reminders</p>
-                        <p className="text-sm text-dark-400">Remind employees to check out at work end time</p>
+                        <p className="text-sm text-gray-400">Remind employees to check out at work end time</p>
                       </div>
                       <button className="relative w-12 h-6 bg-accent rounded-full">
                         <span className="absolute top-1 left-7 w-4 h-4 bg-white rounded-full" />

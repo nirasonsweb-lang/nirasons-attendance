@@ -44,10 +44,21 @@ export default async function AdminDashboard() {
   const absentToday = totalEmployees - presentToday;
   const attendanceRate = totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0;
 
-  // Calculate average times
+  // Calculate average times (convert to IST for display)
   const checkInTimes = todayAttendance
     .filter((a: any) => a.checkInTime)
-    .map((a: any) => new Date(a.checkInTime!).getHours() * 60 + new Date(a.checkInTime!).getMinutes());
+    .map((a: any) => {
+      // Convert to IST by creating a date and formatting in Asia/Kolkata timezone
+      const date = new Date(a.checkInTime!);
+      const istTime = date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kolkata'
+      });
+      const [hours, minutes] = istTime.split(':').map(Number);
+      return hours * 60 + minutes;
+    });
 
   let avgCheckIn = '--:--';
   if (checkInTimes.length > 0) {
@@ -141,7 +152,7 @@ export default async function AdminDashboard() {
                         {record.status === 'ON_TIME' ? 'On Time' : record.status === 'LATE' ? 'Late' : 'Absent'}
                       </Badge>
                     </td>
-                    <td className="table-cell text-gray-400 text-sm max-w-[150px] truncate" title={record.checkInAddr || '-'}>
+                    <td className="table-cell text-white text-sm max-w-[150px] truncate" title={record.checkInAddr || '-'}>
                       {record.checkInAddr || '-'}
                     </td>
                   </tr>

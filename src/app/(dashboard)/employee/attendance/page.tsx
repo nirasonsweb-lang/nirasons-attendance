@@ -39,7 +39,7 @@ export default function EmployeeAttendancePage() {
           params.append('startDate', startDate.toISOString().split('T')[0]);
           params.append('endDate', endDate.toISOString().split('T')[0]);
         }
-        
+
         const res = await fetch(`/api/attendance?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
@@ -60,9 +60,11 @@ export default function EmployeeAttendancePage() {
     onTime: attendance.filter(a => a.status === 'ON_TIME').length,
     late: attendance.filter(a => a.status === 'LATE').length,
     absent: attendance.filter(a => a.status === 'ABSENT').length,
-    avgHours: attendance.length > 0
-      ? (attendance.reduce((sum, a) => sum + (a.workHours || 0), 0) / attendance.filter(a => a.workHours).length).toFixed(1)
-      : '0',
+    avgHours: (() => {
+      const withHours = attendance.filter(a => a.workHours);
+      if (withHours.length === 0) return '0';
+      return (withHours.reduce((sum, a) => sum + (a.workHours || 0), 0) / withHours.length).toFixed(1);
+    })(),
   };
 
   return (
@@ -184,7 +186,7 @@ export default function EmployeeAttendancePage() {
                     </td>
                     <td className="px-6 py-4">
                       {record.checkInAddress ? (
-                        <span className="text-dark-400 text-sm truncate max-w-[200px] block" title={record.checkInAddress}>
+                        <span className="text-white text-sm truncate max-w-[200px] block" title={record.checkInAddress}>
                           {record.checkInAddress}
                         </span>
                       ) : (

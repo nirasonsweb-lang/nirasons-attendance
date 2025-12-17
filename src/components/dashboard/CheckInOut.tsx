@@ -47,8 +47,32 @@ export function CheckInOut() {
     }
   };
 
-  // Get location
-  const getLocation = (): Promise<{ lat: number; lng: number }> => {
+  // Reverse geocode to get address from coordinates
+  const getAddressFromCoords = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        // Return a short address format
+        const parts = [];
+        if (data.address?.road) parts.push(data.address.road);
+        if (data.address?.suburb) parts.push(data.address.suburb);
+        if (data.address?.city || data.address?.town || data.address?.village) {
+          parts.push(data.address.city || data.address.town || data.address.village);
+        }
+        return parts.length > 0 ? parts.join(', ') : data.display_name?.split(',').slice(0, 3).join(', ') || '';
+      }
+    } catch (err) {
+      console.warn('Reverse geocoding failed:', err);
+    }
+    return '';
+  };
+
+  // Get location with address
+  const getLocation = async (): Promise<{ lat: number; lng: number; address: string }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('Geolocation is not supported'));
@@ -56,14 +80,15 @@ export function CheckInOut() {
       }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setLocation(loc);
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setLocation({ lat, lng });
           setLocationError('');
-          resolve(loc);
+
+          // Get address from coordinates
+          const address = await getAddressFromCoords(lat, lng);
+          resolve({ lat, lng, address });
         },
         (err) => {
           setLocationError('Unable to get location. Please enable location services.');
@@ -81,7 +106,7 @@ export function CheckInOut() {
 
     try {
       // Try to get location, but don't fail if unavailable
-      let loc = { lat: 0, lng: 0 };
+      let loc = { lat: 0, lng: 0, address: '' };
       let locationCaptured = false;
 
       try {
@@ -98,6 +123,7 @@ export function CheckInOut() {
         body: JSON.stringify({
           latitude: loc.lat,
           longitude: loc.lng,
+          address: loc.address,
         }),
       });
 
@@ -127,7 +153,7 @@ export function CheckInOut() {
 
     try {
       // Try to get location, but don't fail if unavailable
-      let loc = { lat: 0, lng: 0 };
+      let loc = { lat: 0, lng: 0, address: '' };
       let locationCaptured = false;
 
       try {
@@ -144,6 +170,7 @@ export function CheckInOut() {
         body: JSON.stringify({
           latitude: loc.lat,
           longitude: loc.lng,
+          address: loc.address,
         }),
       });
 

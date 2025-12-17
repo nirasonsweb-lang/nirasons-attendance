@@ -6,7 +6,7 @@ import { getSession, isAdmin } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
-    
+
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -59,14 +59,14 @@ export async function GET(request: NextRequest) {
     // Search and department filter (requires user relation)
     if (search || department) {
       where.user = {};
-      
+
       if (search) {
         where.user.name = {
           contains: search,
           mode: 'insensitive',
         };
       }
-      
+
       if (department) {
         where.user.department = department;
       }
@@ -93,8 +93,15 @@ export async function GET(request: NextRequest) {
       prisma.attendance.count({ where }),
     ]);
 
+    // Map field names to match frontend expectations
+    const mappedRecords = records.map(record => ({
+      ...record,
+      checkInAddress: record.checkInAddr,
+      checkOutAddress: record.checkOutAddr,
+    }));
+
     return NextResponse.json({
-      attendance: records,
+      attendance: mappedRecords,
       pagination: {
         page,
         limit,

@@ -20,7 +20,12 @@ export default async function AdminDashboard() {
     prisma.user.count({ where: { role: 'EMPLOYEE', isActive: true } }),
     prisma.attendance.findMany({
       where: { date: today },
-      include: {
+      select: {
+        id: true,
+        checkInTime: true,
+        checkOutTime: true,
+        checkInAddr: true,
+        status: true,
         user: {
           select: { id: true, name: true, department: true, position: true, avatar: true },
         },
@@ -111,6 +116,7 @@ export default async function AdminDashboard() {
                   <th className="table-header pb-3">Check In</th>
                   <th className="table-header pb-3">Check Out</th>
                   <th className="table-header pb-3">Status</th>
+                  <th className="table-header pb-3">Location</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,11 +141,14 @@ export default async function AdminDashboard() {
                         {record.status === 'ON_TIME' ? 'On Time' : record.status === 'LATE' ? 'Late' : 'Absent'}
                       </Badge>
                     </td>
+                    <td className="table-cell text-gray-400 text-sm max-w-[150px] truncate" title={record.checkInAddr || '-'}>
+                      {record.checkInAddr || '-'}
+                    </td>
                   </tr>
                 ))}
                 {todayAttendance.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="table-cell text-center text-gray-500 py-8">
+                    <td colSpan={6} className="table-cell text-center text-gray-500 py-8">
                       No attendance records for today
                     </td>
                   </tr>

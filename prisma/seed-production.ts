@@ -7,7 +7,7 @@ async function main() {
     console.log('🚀 Production Database Setup\n');
 
     // Hardcoded admin credentials
-    const name = 'Nirasons Admin';
+    const name = 'Nirasons';
     const email = 'nirasons.web@gmail.com';
     const password = 'Nirasons@8269577642';
 

@@ -36,3 +36,7 @@ Thumbs.db
 
 # Misc
 *.pem
+
+DEPLOYMENT.md
+CI-CD-GUIDE.md
+
